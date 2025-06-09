@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회계게임: OX 퀴즈</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 폰트를 Do Hyeon(도현체)으로 변경 -->
+    <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
+    <style>
+        body {
+            /* 폰트를 Do Hyeon(도현체)로 설정 */
+            font-family: 'Do Hyeon', sans-serif;
+        }
+        .squid-game-bg {
+            background-color: #0a192f; /* 오징어 게임 테마 색상 */
+        }
+        .btn-o {
+            background-color: #008000; /* 초록색 */
+            color: white;
+        }
+        .btn-o:hover {
+            background-color: #006400; /* 어두운 초록색 */
+        }
+        .btn-x {
+            background-color: #d32f2f; /* 빨간색 */
+            color: white;
+        }
+        .btn-x:hover {
+            background-color: #b71c1c; /* 어두운 빨간색 */
+        }
+        .feedback-correct {
+            color: #4caf50; /* 밝은 초록색 */
+            font-size: 3rem;
+        }
+        .feedback-incorrect {
+            color: #f44336; /* 밝은 빨간색 */
+            font-size: 3rem;
+        }
+        .disabled-btn {
+            opacity: 0.5;
+            pointer-events: none; /* 클릭 비활성화 */
+        }
+        /* Transition for smooth appearance */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="squid-game-bg text-white flex items-center justify-center min-h-screen p-4">
+
+    <div id="game-container" class="w-full max-w-2xl mx-auto p-4 md:p-8 text-center rounded-lg shadow-xl">
+
+        <!-- 시작 화면 -->
+        <div id="start-screen" class="fade-in bg-gray-800 p-8 rounded-lg">
+            <h1 class="text-5xl md:text-6xl font-bold mb-4 text-pink-500">회계게임</h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-300">자산 vs. 비용, 당신의 선택은?</p>
+            <button id="start-button" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-8 rounded-lg text-2xl transition-transform transform hover:scale-105 shadow-lg">
+                게임 시작
+            </button>
+        </div>
+
+        <!-- 퀴즈 화면 -->
+        <div id="quiz-screen" class="hidden">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">문제 <span id="question-number"></span>/10</h2>
+                    <div class="text-2xl font-bold">점수: <span id="score">0</span></div>
+                </div>
+                <div id="question-container" class="bg-gray-900 p-8 rounded-lg min-h-[150px] flex items-center justify-center shadow-inner">
+                    <p id="question-text" class="text-xl md:text-2xl leading-relaxed"></p>
+                </div>
+            </div>
+            
+            <!-- 답변 버튼 -->
+            <div id="answer-buttons" class="grid grid-cols-2 gap-4 mt-6">
+                <button id="btn-o" class="btn-o font-bold text-5xl py-12 rounded-lg transition-transform transform hover:scale-105 shadow-md">O</button>
+                <button id="btn-x" class="btn-x font-bold text-5xl py-12 rounded-lg transition-transform transform hover:scale-105 shadow-md">X</button>
+            </div>
+            
+            <!-- 피드백 메시지 -->
+            <div id="feedback-container" class="mt-6 p-4 rounded-lg bg-gray-800 min-h-[150px] hidden shadow-lg fade-in">
+                <div id="feedback-result" class="font-bold mb-2"></div>
+                <p id="feedback-explanation" class="text-lg"></p>
+                <button id="next-button" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-xl transition-transform transform hover:scale-105 shadow-md">다음 문제</button>
+            </div>
+        </div>
+
+        <!-- 결과 화면 -->
+        <div id="result-screen" class="hidden fade-in bg-gray-800 p-8 rounded-lg shadow-lg">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 text-pink-500">게임 종료!</h2>
+            <div class="bg-gray-900 p-8 rounded-lg shadow-inner">
+                <p class="text-2xl mb-4 text-gray-300">최종 점수는...</p>
+                <p class="text-6xl font-bold mb-6 text-yellow-400"><span id="final-score"></span>점</p>
+                <p id="result-message" class="text-xl mb-8"></p>
+                <button id="restart-button" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-8 rounded-lg text-2xl transition-transform transform hover:scale-105 shadow-lg">
+                    다시하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM 요소 가져오기
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        
+        const questionNumberEl = document.getElementById('question-number');
+        const questionTextEl = document.getElementById('question-text');
+        const scoreEl = document.getElementById('score');
+        
+        const answerButtons = document.getElementById('answer-buttons');
+        const oButton = document.getElementById('btn-o');
+        const xButton = document.getElementById('btn-x');
+
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackResultEl = document.getElementById('feedback-result');
+        const feedbackExplanationEl = document.getElementById('feedback-explanation');
+        const nextButton = document.getElementById('next-button');
+        
+        const finalScoreEl = document.getElementById('final-score');
+        const resultMessageEl = document.getElementById('result-message');
+        
+        // 퀴즈 데이터
+        const quizData = [
+            {
+                question: "1년 이상 장기적으로 사용할 목적으로 구매한 200만원짜리 컴퓨터는 비용으로 처리한다.",
+                answer: false,
+                explanation: "X: 1년 이상 사용하고 취득가액이 100만원(회사 기준)을 초과하므로 고정자산으로 처리해야 합니다."
+            },
+            {
+                question: "사무실에서 사용하는 볼펜, 복사용지 등 소모품은 일반적으로 고정자산으로 처리한다.",
+                answer: false,
+                explanation: "X: 소모품은 통상 1년 이내에 소비되므로 미래 경제적 효익이 없어 비용으로 처리합니다."
+            },
+            {
+                question: "5만원짜리 키보드는 1년 이상 사용할 수 있더라도, 금액적 중요성이 낮아 비용으로 처리할 수 있다.",
+                answer: true,
+                explanation: "O: 회사의 기준 금액(예: 100만원) 미만인 소액 자산은 회계처리의 효율성을 위해 비용으로 처리할 수 있습니다."
+            },
+            {
+                question: "회계 처리 시 자산과 비용을 나누는 기준은 '사용 기간'이 유일하다.",
+                answer: false,
+                explanation: "X: '사용 기간' 외에도 '금액적 중요성'을 함께 고려하여 자산과 비용을 구분합니다."
+            },
+            {
+                question: "고장 난 노트북 액정을 교체하는 등 원상회복을 위한 수리비는 자본적 지출에 해당한다.",
+                answer: false,
+                explanation: "X: 원상회복이나 현상 유지를 위한 지출은 자산의 가치를 증가시키지 않으므로 비용(수익적 지출)으로 처리합니다."
+            },
+            {
+                question: "기계의 생산량을 2배로 늘리는 부품으로 교체하는 것은 자산의 가치를 높이는 '자본적 지출'에 해당한다.",
+                answer: true,
+                explanation: "O: 자산의 성능을 현저히 향상시키거나 내용연수를 연장하는 지출은 자산의 가치에 더해지는 자본적 지출입니다."
+            },
+            {
+                question: "세법에서는 취득가액이 100만원 이하인 자산이라도 반드시 고정자산으로 처리해야 한다.",
+                answer: false,
+                explanation: "X: 세법상 100만원 이하의 소액자산은 즉시상각의제에 따라 바로 비용으로 처리(손금산입)할 수 있습니다."
+            },
+            {
+                question: "자산에 대한 수선비로 500만원이 발생했다면, 회계상 자본적 지출에 해당하더라도 세법에서는 바로 비용으로 처리할 수 있다.",
+                answer: true,
+                explanation: "O: 세법상 소액 수선비 기준인 600만원 미만에 해당하므로 즉시 손금으로 인정받을 수 있습니다. (즉시상각의제)"
+            },
+            {
+                question: "세법상 소액 수선비의 기준 금액은 300만원이다.",
+                answer: false,
+                explanation: "X: 2020년부터 소액 수선비 기준은 300만원에서 600만원으로 상향 조정되었습니다."
+            },
+            {
+                question: "업무용 승용차의 감가상각비는 회계 처리와 세법상 한도에 차이가 없어 세무조정이 필요 없다.",
+                answer: false,
+                explanation: "X: 세법에서는 연간 800만원이라는 감가상각비 한도가 존재하여, 한도 초과분에 대해서는 세무조정이 필요합니다."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // 게임 시작
+        function startGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreEl.textContent = score;
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            quizScreen.classList.add('fade-in');
+            showQuestion();
+        }
+
+        // 문제 보여주기
+        function showQuestion() {
+            resetState();
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionNumberEl.textContent = currentQuestionIndex + 1;
+            questionTextEl.textContent = currentQuestion.question;
+        }
+
+        // 상태 초기화 (버튼 활성화, 피드백 숨기기)
+        function resetState() {
+            // 모든 버튼 활성화
+            oButton.classList.remove('disabled-btn');
+            xButton.classList.remove('disabled-btn');
+            // 피드백 컨테이너 숨기기
+            feedbackContainer.classList.add('hidden');
+            // 애니메이션 클래스 제거 (다음 문제 로드 시 다시 추가)
+            feedbackContainer.classList.remove('fade-in');
+        }
+
+        // 답변 선택
+        function selectAnswer(userAnswer) {
+            // 답변 버튼 비활성화
+            oButton.classList.add('disabled-btn');
+            xButton.classList.add('disabled-btn');
+            
+            const correct = quizData[currentQuestionIndex].answer === userAnswer;
+            
+            if (correct) {
+                score += 10;
+                scoreEl.textContent = score;
+                feedbackResultEl.innerHTML = '<span class="feedback-correct">O</span> 정답입니다!';
+            } else {
+                feedbackResultEl.innerHTML = '<span class="feedback-incorrect">X</span> 오답입니다.';
+            }
+
+            feedbackExplanationEl.textContent = quizData[currentQuestionIndex].explanation;
+            feedbackContainer.classList.remove('hidden');
+            feedbackContainer.classList.add('fade-in'); // 피드백 표시 시 애니메이션 적용
+
+            // 다음 문제 또는 결과 보기 버튼 텍스트 설정
+            if (quizData.length > currentQuestionIndex + 1) {
+                nextButton.textContent = "다음 문제";
+            } else {
+                nextButton.textContent = "결과 보기";
+            }
+        }
+
+        // 결과 화면 보여주기
+        function showResult() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            resultScreen.classList.add('fade-in'); // 결과 화면 표시 시 애니메이션 적용
+            finalScoreEl.textContent = score;
+
+            let message = "";
+            if (score >= 80) {
+                message = "완벽해요! 당신은 회계 마스터!";
+            } else if (score >= 50) {
+                message = "잘했어요! 조금만 더 공부하면 완벽하겠어요.";
+            } else {
+                message = "아쉬워요. 학습 자료를 다시 한번 읽어볼까요?";
+            }
+            resultMessageEl.textContent = message;
+        }
+        
+        // 이벤트 리스너 설정
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        oButton.addEventListener('click', () => selectAnswer(true));
+        xButton.addEventListener('click', () => selectAnswer(false));
+        
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (quizData.length > currentQuestionIndex) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        });
+
+    </script>
+</body>
+</html>
