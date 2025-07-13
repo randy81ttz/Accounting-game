@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>초등 영단어 OX 퀴즈</title>
+    <title>우리아들 영단어 OX 퀴즈</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Gasoek+One&display=swap" rel="stylesheet">
     <style>
@@ -15,6 +15,7 @@
         }
         .card {
             transition: all 0.3s ease;
+            border: 4px solid transparent;
         }
         .btn-ox {
             transition: all 0.2s ease;
@@ -42,7 +43,7 @@
         
         <!-- 시작 화면 -->
         <div id="start-screen" class="text-center bg-white p-8 rounded-2xl shadow-lg">
-            <h1 class="text-4xl font-title text-sky-600 mb-4">영단어 OX 퀴즈</h1>
+            <h1 class="text-4xl font-title text-sky-600 mb-4">우리아들 영단어 OX 퀴즈</h1>
             <p class="text-gray-600 mb-8">영어 단어를 보고 뜻이 맞는지 O, X로 답해봐!</p>
             <button id="start-btn" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md transition-transform transform hover:scale-105">
                 퀴즈 시작!
@@ -90,19 +91,20 @@
     </div>
 
     <script>
+        // 요청하신 새로운 단어 목록으로 교체했습니다.
         const words = [
-            { word: 'apple', meaning: '사과', example: 'I ate an apple.', example_kr: '나는 사과를 먹었다.' },
-            { word: 'book', meaning: '책', example: 'I read a book.', example_kr: '나는 책을 읽는다.' },
-            { word: 'cat', meaning: '고양이', example: 'The cat is cute.', example_kr: '그 고양이는 귀엽다.' },
-            { word: 'dog', meaning: '개', example: 'The dog is big.', example_kr: '그 개는 크다.' },
-            { word: 'egg', meaning: '계란', example: 'I like to eat eggs.', example_kr: '나는 계란 먹는 것을 좋아한다.' },
-            { word: 'flower', meaning: '꽃', example: 'The flower is beautiful.', example_kr: '그 꽃은 아름답다.' },
-            { word: 'grape', meaning: '포도', example: 'Grapes are sweet.', example_kr: '포도는 달콤하다.' },
-            { word: 'hat', meaning: '모자', example: 'I have a new hat.', example_kr: '나는 새 모자가 있다.' },
-            { word: 'ice', meaning: '얼음', example: 'The ice is cold.', example_kr: '얼음은 차갑다.' },
-            { word: 'juice', meaning: '주스', example: 'I drink orange juice.', example_kr: '나는 오렌지 주스를 마신다.' },
-            { word: 'key', meaning: '열쇠', example: 'This is the key to the door.', example_kr: '이것은 그 문의 열쇠이다.' },
-            { word: 'lion', meaning: '사자', example: 'The lion is the king of the jungle.', example_kr: '사자는 정글의 왕이다.' }
+            { word: 'pat', meaning: '쓰다듬다', example: 'I can pat the dog.' },
+            { word: 'goldfish', meaning: '금붕어', example: 'There is a goldfish in the tank.' },
+            { word: 'bowl', meaning: '그릇', example: 'Put the fish in the bowl.' },
+            { word: 'watch', meaning: '보다', example: "Don't watch too much TV." },
+            { word: 'pet', meaning: '애완동물', example: 'Do you have a pet?' },
+            { word: 'new', meaning: '새로운', example: 'They moved to a new house.' },
+            { word: 'dog', meaning: '개', example: 'The dog barks.' },
+            { word: 'cat', meaning: '고양이', example: 'Jenny likes cats.' },
+            { word: 'fish', meaning: '물고기', example: 'The fish swims.' },
+            { word: 'net', meaning: '그물', example: "Let's use a net to catch butterflies." },
+            { word: 'shake', meaning: '흔들다', example: 'James shakes the box.' },
+            { word: 'chick', meaning: '병아리', example: 'The chick is yellow.' }
         ];
 
         // UI 요소
@@ -180,8 +182,7 @@
                         word: currentWord.word,
                         meaning: currentWord.meaning,
                         isCorrect: true, // O가 정답
-                        example: currentWord.example,
-                        example_kr: currentWord.example_kr
+                        example: currentWord.example
                     };
                 } else {
                     // 오답 문제
@@ -197,8 +198,7 @@
                         meaning: wrongMeaning,
                         isCorrect: false, // X가 정답
                         correctMeaning: currentWord.meaning,
-                        example: currentWord.example,
-                        example_kr: currentWord.example_kr
+                        example: currentWord.example
                     };
                 }
                 quizQuestions.push(question);
