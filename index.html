@@ -3,260 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>우리아들 영단어 OX 퀴즈</title>
+    <title>영단어 학습 & 퀴즈</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Gasoek+One&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .font-title {
             font-family: 'Gasoek One', sans-serif;
         }
+        .main-container {
+            max-width: 420px; /* 모바일 화면에 최적화된 너비 */
+        }
         .card {
-            transition: all 0.3s ease;
-            border: 4px solid transparent;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
         }
-        .btn-ox {
-            transition: all 0.2s ease;
+        .card .front, .card .back {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
-        .btn-ox:active {
-            transform: scale(0.95);
+        .card .back {
+            transform: rotateY(180deg);
         }
-        .feedback-correct {
-            color: #2ecc71;
-            animation: fadeIn 0.5s;
+        .card.is-flipped {
+            transform: rotateY(180deg);
         }
-        .feedback-incorrect {
-            color: #e74c3c;
-            animation: fadeIn 0.5s;
+        .btn:active {
+            transform: scale(0.96);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .quiz-option.correct {
+            background-color: #2ecc71 !important;
+            color: white !important;
+            border-color: #27ae60 !important;
+        }
+        .quiz-option.incorrect {
+            background-color: #e74c3c !important;
+            color: white !important;
+            border-color: #c0392b !important;
+        }
+        .quiz-option.disabled {
+            pointer-events: none;
+            opacity: 0.7;
         }
     </style>
 </head>
-<body class="bg-sky-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-sky-50 flex items-center justify-center min-h-screen p-4">
 
-    <div id="quiz-container" class="w-full max-w-md mx-auto">
-        
+    <div class="main-container w-full mx-auto">
+
         <!-- 시작 화면 -->
-        <div id="start-screen" class="text-center bg-white p-8 rounded-2xl shadow-lg">
-            <h1 class="text-4xl font-title text-sky-600 mb-4">우리아들 영단어 OX 퀴즈</h1>
-            <p class="text-gray-600 mb-8">영어 단어를 보고 뜻이 맞는지 O, X로 답해봐!</p>
-            <button id="start-btn" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md transition-transform transform hover:scale-105">
-                퀴즈 시작!
-            </button>
-        </div>
-
-        <!-- 퀴즈 화면 -->
-        <div id="quiz-screen" class="hidden">
-            <div class="text-center mb-4">
-                <p id="progress-text" class="text-lg font-semibold text-gray-700">문제 1 / 12</p>
-                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div id="progress-bar" class="bg-amber-400 h-2.5 rounded-full" style="width: 8%"></div>
-                </div>
-            </div>
-
-            <div id="card" class="card bg-white p-8 rounded-2xl shadow-lg text-center mb-6 min-h-[200px] flex flex-col justify-center">
-                <p id="word" class="text-6xl font-bold text-sky-700 mb-3"></p>
-                <p id="meaning" class="text-4xl text-gray-800"></p>
-            </div>
-
-            <div id="ox-buttons" class="grid grid-cols-2 gap-4">
-                <button data-answer="O" class="btn-ox bg-green-500 hover:bg-green-600 text-white font-bold text-6xl py-8 rounded-2xl shadow-md">O</button>
-                <button data-answer="X" class="btn-ox bg-red-500 hover:bg-red-600 text-white font-bold text-6xl py-8 rounded-2xl shadow-md">X</button>
-            </div>
-            
-            <div id="feedback-container" class="mt-6 text-center min-h-[120px]">
-                <div id="feedback-result" class="text-4xl font-bold mb-2"></div>
-                <div id="feedback-sentence" class="text-lg text-gray-700 bg-gray-100 p-3 rounded-lg"></div>
-                <button id="next-btn" class="hidden w-full mt-4 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl text-xl shadow-md">
-                    다음 문제
+        <div id="start-screen" class="text-center bg-white p-8 rounded-2xl shadow-xl">
+            <h1 class="text-4xl font-title text-sky-600 mb-4">영단어 정복!</h1>
+            <p class="text-gray-600 mb-8">학습과 퀴즈 중 무엇을 먼저 해볼까?</p>
+            <div class="space-y-4">
+                <button id="start-study-btn" class="btn w-full bg-amber-400 hover:bg-amber-500 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md transition-transform">
+                    📖 학습하기
+                </button>
+                <button id="start-quiz-btn" class="btn w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md transition-transform">
+                    ✏️ 퀴즈 풀기
                 </button>
             </div>
         </div>
 
+        <!-- 학습 모드 화면 -->
+        <div id="study-screen" class="hidden">
+            <div class="relative">
+                <div id="study-card" class="card w-full h-80">
+                    <!-- 카드 앞면 -->
+                    <div class="front absolute w-full h-full bg-white rounded-2xl shadow-lg p-8 flex flex-col justify-center items-center">
+                        <p id="study-word" class="text-6xl font-bold text-sky-700"></p>
+                        <button id="speak-btn-front" class="mt-4 text-4xl">🔊</button>
+                        <button id="flip-to-back-btn" class="mt-8 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-xl text-lg">정답 확인</button>
+                    </div>
+                    <!-- 카드 뒷면 -->
+                    <div class="back absolute w-full h-full bg-sky-100 rounded-2xl shadow-lg p-8 flex flex-col justify-center items-center text-center">
+                        <p id="study-meaning" class="text-4xl font-bold text-sky-800 mb-4"></p>
+                        <p id="study-example" class="text-lg text-gray-700"></p>
+                        <button id="flip-to-front-btn" class="mt-8 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-xl text-lg">다시 보기</button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-between mt-6">
+                <button id="prev-word-btn" class="btn bg-white py-3 px-6 rounded-lg shadow-md font-bold text-gray-700">이전</button>
+                <p id="study-progress" class="flex items-center font-semibold text-gray-600">1 / 12</p>
+                <button id="next-word-btn" class="btn bg-white py-3 px-6 rounded-lg shadow-md font-bold text-gray-700">다음</button>
+            </div>
+            <button id="back-to-start-from-study" class="btn w-full mt-6 bg-red-400 hover:bg-red-500 text-white font-bold py-3 rounded-xl text-lg">처음으로</button>
+        </div>
+
+        <!-- 퀴즈 모드 화면 -->
+        <div id="quiz-screen" class="hidden">
+             <div class="text-center mb-4">
+                <p id="quiz-progress-text" class="text-lg font-semibold text-gray-700">문제 1 / 12</p>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div id="quiz-progress-bar" class="bg-amber-400 h-2.5 rounded-full transition-all duration-300" style="width: 8%"></div>
+                </div>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-lg text-center mb-6">
+                <p id="quiz-word" class="text-5xl font-bold text-sky-700"></p>
+                 <button id="speak-btn-quiz" class="mt-2 text-3xl">🔊</button>
+            </div>
+            <div id="quiz-options" class="grid grid-cols-1 gap-3">
+                <!-- 보기 버튼들이 여기에 동적으로 추가됩니다 -->
+            </div>
+            <button id="back-to-start-from-quiz" class="btn w-full mt-6 bg-red-400 hover:bg-red-500 text-white font-bold py-3 rounded-xl text-lg">처음으로</button>
+        </div>
+        
         <!-- 결과 화면 -->
-        <div id="result-screen" class="hidden text-center bg-white p-8 rounded-2xl shadow-lg">
+        <div id="result-screen" class="hidden text-center bg-white p-8 rounded-2xl shadow-xl">
             <h2 class="text-3xl font-bold text-sky-600 mb-2">참 잘했어요!</h2>
             <p id="score-text" class="text-2xl text-gray-700 mb-6"></p>
             <div id="result-message" class="text-xl text-amber-600 font-semibold mb-8"></div>
-            <button id="retry-btn" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md transition-transform transform hover:scale-105">
+            <button id="retry-quiz-btn" class="btn w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md">
                 다시 풀어보기
             </button>
+             <button id="back-to-start-from-result" class="btn w-full mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 rounded-xl text-lg">처음으로</button>
         </div>
 
     </div>
 
     <script>
-        // 요청하신 새로운 단어 목록으로 교체했습니다.
         const words = [
-            { word: 'pat', meaning: '쓰다듬다', example: 'I can pat the dog.' },
-            { word: 'goldfish', meaning: '금붕어', example: 'There is a goldfish in the tank.' },
-            { word: 'bowl', meaning: '그릇', example: 'Put the fish in the bowl.' },
-            { word: 'watch', meaning: '보다', example: "Don't watch too much TV." },
-            { word: 'pet', meaning: '애완동물', example: 'Do you have a pet?' },
-            { word: 'new', meaning: '새로운', example: 'They moved to a new house.' },
-            { word: 'dog', meaning: '개', example: 'The dog barks.' },
-            { word: 'cat', meaning: '고양이', example: 'Jenny likes cats.' },
-            { word: 'fish', meaning: '물고기', example: 'The fish swims.' },
-            { word: 'net', meaning: '그물', example: "Let's use a net to catch butterflies." },
-            { word: 'shake', meaning: '흔들다', example: 'James shakes the box.' },
-            { word: 'chick', meaning: '병아리', example: 'The chick is yellow.' }
+            { word: 'beach', meaning: '해변', example: "Let's go to the beach." },
+            { word: 'sea', meaning: '바다', example: 'There are lots of fish under the sea.' },
+            { word: 'park', meaning: '공원', example: 'Many people go to the park.' },
+            { word: 'bird', meaning: '새', example: 'The birds make a nest on the tree.' },
+            { word: 'sing', meaning: '노래하다', example: 'Can Jenny sing well?' },
+            { word: 'buzz', meaning: '윙윙거리다', example: 'The bees buzz.' },
+            { word: 'what', meaning: '무엇', example: 'What do you want for your birthday?' },
+            { word: 'tweet', meaning: '짹짹거리다', example: 'The birds tweet.' },
+            { word: 'man', meaning: '남자', example: 'That man is a cook.' },
+            { word: 'woof', meaning: '멍멍', example: 'The dog says woof.' },
+            { word: 'math', meaning: '수학', example: "James doesn't like math." },
+            { word: 'clothe', meaning: '옷을 입히다', example: 'Parents clothe their children everyday.' }
         ];
 
         // UI 요소
         const startScreen = document.getElementById('start-screen');
+        const studyScreen = document.getElementById('study-screen');
         const quizScreen = document.getElementById('quiz-screen');
         const resultScreen = document.getElementById('result-screen');
+
+        // 버튼
+        const startStudyBtn = document.getElementById('start-study-btn');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const backToStartFromStudy = document.getElementById('back-to-start-from-study');
+        const backToStartFromQuiz = document.getElementById('back-to-start-from-quiz');
+        const backToStartFromResult = document.getElementById('back-to-start-from-result');
+        const retryQuizBtn = document.getElementById('retry-quiz-btn');
+
+        // 상태 변수
+        let currentWordIndex = 0;
+        let currentQuizIndex = 0;
+        let quizQuestions = [];
+        let score = 0;
+        const synth = window.speechSynthesis;
+        let voices = [];
+
+        // --- 음성 합성 기능 ---
+        function populateVoiceList() {
+            if(typeof synth === 'undefined') {
+                return;
+            }
+            voices = synth.getVoices().filter(voice => voice.lang.startsWith('en'));
+        }
+
+        populateVoiceList();
+        if (typeof synth !== 'undefined' && synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = populateVoiceList;
+        }
+
+        function speak(text) {
+            if (synth.speaking) {
+                console.error('speechSynthesis.speaking');
+                return;
+            }
+            if (text !== '') {
+                const utterThis = new SpeechSynthesisUtterance(text);
+                utterThis.onend = function (event) {
+                    // console.log('SpeechSynthesisUtterance.onend');
+                }
+                utterThis.onerror = function (event) {
+                    console.error('SpeechSynthesisUtterance.onerror');
+                }
+                // 영어 목소리 우선 선택
+                const englishVoice = voices.find(voice => voice.name.includes('Google US English') || voice.name.includes('Microsoft David') || voice.lang === 'en-US');
+                utterThis.voice = englishVoice || voices[0];
+                utterThis.pitch = 1;
+                utterThis.rate = 0.9;
+                synth.speak(utterThis);
+            }
+        }
+
+        // --- 화면 전환 로직 ---
+        function showScreen(screen) {
+            startScreen.classList.add('hidden');
+            studyScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            screen.classList.remove('hidden');
+        }
+
+        startStudyBtn.addEventListener('click', () => {
+            showScreen(studyScreen);
+            startStudy();
+        });
+        startQuizBtn.addEventListener('click', () => {
+            showScreen(quizScreen);
+            startQuiz();
+        });
+        backToStartFromStudy.addEventListener('click', () => showScreen(startScreen));
+        backToStartFromQuiz.addEventListener('click', () => showScreen(startScreen));
+        backToStartFromResult.addEventListener('click', () => showScreen(startScreen));
+        retryQuizBtn.addEventListener('click', () => {
+            showScreen(quizScreen);
+            startQuiz();
+        });
+
+        // --- 학습 모드 로직 ---
+        const studyCard = document.getElementById('study-card');
+        const studyWord = document.getElementById('study-word');
+        const studyMeaning = document.getElementById('study-meaning');
+        const studyExample = document.getElementById('study-example');
+        const studyProgress = document.getElementById('study-progress');
+        const speakBtnFront = document.getElementById('speak-btn-front');
+        const flipToBackBtn = document.getElementById('flip-to-back-btn');
+        const flipToFrontBtn = document.getElementById('flip-to-front-btn');
+        const prevWordBtn = document.getElementById('prev-word-btn');
+        const nextWordBtn = document.getElementById('next-word-btn');
         
-        const startBtn = document.getElementById('start-btn');
-        const retryBtn = document.getElementById('retry-btn');
-        const nextBtn = document.getElementById('next-btn');
+        function startStudy() {
+            currentWordIndex = 0;
+            displayStudyWord();
+        }
+
+        function displayStudyWord() {
+            studyCard.classList.remove('is-flipped');
+            const wordData = words[currentWordIndex];
+            studyWord.textContent = wordData.word;
+            studyMeaning.textContent = wordData.meaning;
+            studyExample.textContent = wordData.example;
+            studyProgress.textContent = `${currentWordIndex + 1} / ${words.length}`;
+        }
+
+        speakBtnFront.addEventListener('click', () => speak(words[currentWordIndex].word));
+        flipToBackBtn.addEventListener('click', () => studyCard.classList.add('is-flipped'));
+        flipToFrontBtn.addEventListener('click', () => studyCard.classList.remove('is-flipped'));
         
-        const progressText = document.getElementById('progress-text');
-        const progressBar = document.getElementById('progress-bar');
-        const wordEl = document.getElementById('word');
-        const meaningEl = document.getElementById('meaning');
-        const oxButtons = document.getElementById('ox-buttons');
-        
-        const feedbackResult = document.getElementById('feedback-result');
-        const feedbackSentence = document.getElementById('feedback-sentence');
-        
+        nextWordBtn.addEventListener('click', () => {
+            currentWordIndex = (currentWordIndex + 1) % words.length;
+            displayStudyWord();
+        });
+        prevWordBtn.addEventListener('click', () => {
+            currentWordIndex = (currentWordIndex - 1 + words.length) % words.length;
+            displayStudyWord();
+        });
+
+        // --- 퀴즈 모드 로직 ---
+        const quizProgressText = document.getElementById('quiz-progress-text');
+        const quizProgressBar = document.getElementById('quiz-progress-bar');
+        const quizWord = document.getElementById('quiz-word');
+        const speakBtnQuiz = document.getElementById('speak-btn-quiz');
+        const quizOptions = document.getElementById('quiz-options');
         const scoreText = document.getElementById('score-text');
         const resultMessage = document.getElementById('result-message');
-
-        // 퀴즈 상태 변수
-        let quizQuestions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-
-        // 퀴즈 시작
-        startBtn.addEventListener('click', startQuiz);
-        retryBtn.addEventListener('click', startQuiz);
-
-        // O, X 버튼 클릭 이벤트
-        oxButtons.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') {
-                checkAnswer(e.target.dataset.answer);
-            }
-        });
-
-        // 다음 문제 버튼 클릭
-        nextBtn.addEventListener('click', () => {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < quizQuestions.length) {
-                showQuestion();
-            } else {
-                showResults();
-            }
-        });
-
+        
         function startQuiz() {
-            currentQuestionIndex = 0;
+            currentQuizIndex = 0;
             score = 0;
             createQuizQuestions();
-            
-            startScreen.classList.add('hidden');
-            resultScreen.classList.add('hidden');
-            quizScreen.classList.remove('hidden');
-            
-            showQuestion();
+            displayQuizQuestion();
         }
 
-        // 퀴즈 문제 생성 (O/X 랜덤 배합)
         function createQuizQuestions() {
-            quizQuestions = [];
-            const shuffledWords = [...words].sort(() => Math.random() - 0.5);
-
-            for (let i = 0; i < shuffledWords.length; i++) {
-                const currentWord = shuffledWords[i];
-                let question = {};
-                
-                // 50% 확률로 정답(O) 또는 오답(X) 문제 생성
-                if (Math.random() > 0.5) {
-                    // 정답 문제
-                    question = {
-                        word: currentWord.word,
-                        meaning: currentWord.meaning,
-                        isCorrect: true, // O가 정답
-                        example: currentWord.example
-                    };
-                } else {
-                    // 오답 문제
-                    let wrongMeaning;
-                    do {
-                        // 다른 단어의 뜻을 무작위로 가져옴
-                        const randomWord = words[Math.floor(Math.random() * words.length)];
-                        wrongMeaning = randomWord.meaning;
-                    } while (wrongMeaning === currentWord.meaning); // 원래 뜻과 같지 않을 때까지 반복
-
-                    question = {
-                        word: currentWord.word,
-                        meaning: wrongMeaning,
-                        isCorrect: false, // X가 정답
-                        correctMeaning: currentWord.meaning,
-                        example: currentWord.example
-                    };
-                }
-                quizQuestions.push(question);
-            }
+            quizQuestions = [...words].sort(() => Math.random() - 0.5);
         }
 
-        function showQuestion() {
-            // 피드백 초기화
-            feedbackResult.textContent = '';
-            feedbackSentence.innerHTML = '';
-            feedbackSentence.classList.add('hidden');
-            nextBtn.classList.add('hidden');
-            oxButtons.classList.remove('hidden');
-            document.getElementById('card').style.transform = 'scale(1)';
-            document.getElementById('card').style.borderColor = 'transparent';
+        function displayQuizQuestion() {
+            const question = quizQuestions[currentQuizIndex];
+            quizWord.textContent = question.word;
+            quizOptions.innerHTML = '';
+            
+            // 정답과 오답 보기 만들기
+            const options = [question.meaning];
+            while (options.length < 4) {
+                const randomWord = words[Math.floor(Math.random() * words.length)];
+                if (!options.includes(randomWord.meaning)) {
+                    options.push(randomWord.meaning);
+                }
+            }
+            // 보기 섞기
+            options.sort(() => Math.random() - 0.5);
 
-            const question = quizQuestions[currentQuestionIndex];
-            wordEl.textContent = question.word;
-            meaningEl.textContent = question.meaning;
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('quiz-option', 'btn', 'w-full', 'bg-white', 'p-4', 'rounded-lg', 'shadow', 'text-lg', 'font-semibold', 'text-gray-700', 'border-2', 'border-gray-200', 'hover:bg-gray-100');
+                button.addEventListener('click', () => checkAnswer(button, option, question.meaning));
+                quizOptions.appendChild(button);
+            });
 
             // 진행 상태 업데이트
-            progressText.textContent = `문제 ${currentQuestionIndex + 1} / ${quizQuestions.length}`;
-            const progressPercentage = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
-            progressBar.style.width = `${progressPercentage}%`;
+            quizProgressText.textContent = `문제 ${currentQuizIndex + 1} / ${quizQuestions.length}`;
+            const progressPercentage = ((currentQuizIndex + 1) / quizQuestions.length) * 100;
+            quizProgressBar.style.width = `${progressPercentage}%`;
         }
-        
-        function checkAnswer(userAnswer) {
-            const question = quizQuestions[currentQuestionIndex];
-            const card = document.getElementById('card');
-            
-            // O, X 버튼 숨기기
-            oxButtons.classList.add('hidden');
-            nextBtn.classList.remove('hidden');
 
-            const isUserCorrect = (question.isCorrect && userAnswer === 'O') || (!question.isCorrect && userAnswer === 'X');
+        speakBtnQuiz.addEventListener('click', () => speak(quizQuestions[currentQuizIndex].word));
 
-            if (isUserCorrect) {
+        function checkAnswer(button, selectedMeaning, correctMeaning) {
+            const allOptions = quizOptions.querySelectorAll('.quiz-option');
+            allOptions.forEach(opt => opt.classList.add('disabled'));
+
+            if (selectedMeaning === correctMeaning) {
                 score++;
-                feedbackResult.textContent = '딩동댕! 정답! 🥳';
-                feedbackResult.className = 'feedback-correct text-4xl font-bold mb-2';
-                card.style.borderColor = '#2ecc71';
-                card.style.transform = 'rotate(5deg)';
-                feedbackSentence.innerHTML = `<strong>${question.word}:</strong> ${question.isCorrect ? question.meaning : question.correctMeaning}<br><small>${question.example}</small>`;
+                button.classList.add('correct');
             } else {
-                feedbackResult.textContent = '아쉬워요! 😥';
-                feedbackResult.className = 'feedback-incorrect text-4xl font-bold mb-2';
-                card.style.borderColor = '#e74c3c';
-                card.style.transform = 'rotate(-5deg)';
-                feedbackSentence.innerHTML = `정답은 <strong>'${question.word}'</strong>의 뜻은 <strong>'${question.isCorrect ? question.meaning : question.correctMeaning}'</strong>이에요.<br><small>${question.example}</small>`;
+                button.classList.add('incorrect');
+                allOptions.forEach(opt => {
+                    if (opt.textContent === correctMeaning) {
+                        opt.classList.add('correct');
+                    }
+                });
             }
-            
-            feedbackSentence.classList.remove('hidden');
+
+            setTimeout(() => {
+                currentQuizIndex++;
+                if (currentQuizIndex < quizQuestions.length) {
+                    displayQuizQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500);
         }
 
         function showResults() {
-            quizScreen.classList.add('hidden');
-            resultScreen.classList.remove('hidden');
-            
+            showScreen(resultScreen);
             scoreText.textContent = `${quizQuestions.length}개 중에 ${score}개를 맞혔어요!`;
             
             let message = '';
