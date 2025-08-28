@@ -1,363 +1,220 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영단어 학습 & 퀴즈</title>
+    <title>移転価格コーヒーチャット</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Gasoek+One&display=swap" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
         body {
-            font-family: 'Noto Sans KR', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f3f4f6;
         }
-        .font-title {
-            font-family: 'Gasoek One', sans-serif;
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 85vh;
+            max-height: 800px;
+            background-color: #A8C5D4;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        .main-container {
-            max-width: 420px; /* 모바일 화면에 최적화된 너비 */
+        .main-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            color: #4A3728;
+            background: linear-gradient(135deg, #FFFDE7, #FFF8E1);
+            padding: 2rem;
         }
-        .card {
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
+        .chat-header {
+            background-color: #92B3C3;
+            color: #3C474D;
+            flex-shrink: 0;
         }
-        .card .front, .card .back {
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
+        .chat-body {
+            scroll-behavior: smooth;
         }
-        .card .back {
-            transform: rotateY(180deg);
+        .chat-bubble {
+            max-width: 100%;
+            word-wrap: break-word;
         }
-        .card.is-flipped {
-            transform: rotateY(180deg);
+        .chat-bubble.me {
+            background-color: #FEE500;
+            color: #3C1E1E;
         }
-        .btn:active {
-            transform: scale(0.96);
+        .chat-bubble.you {
+            background-color: #FFFFFF;
         }
-        .quiz-option.correct {
-            background-color: #2ecc71 !important;
-            color: white !important;
-            border-color: #27ae60 !important;
+        .timestamp {
+            font-size: 0.7rem;
+            color: #6b7280;
+            flex-shrink: 0;
         }
-        .quiz-option.incorrect {
-            background-color: #e74c3c !important;
-            color: white !important;
-            border-color: #c0392b !important;
+        .chat-date-separator {
+            font-size: 0.75rem;
+            color: #ffffff;
+            background-color: #83A2B1;
         }
-        .quiz-option.disabled {
-            pointer-events: none;
-            opacity: 0.7;
+        .message-group {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            max-width: 85%;
+        }
+        .message-group.me {
+            margin-left: auto;
+        }
+        .message-group.you {
+            margin-right: auto;
+        }
+        .message-group.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .controls {
+            flex-shrink: 0;
         }
     </style>
 </head>
-<body class="bg-sky-50 flex items-center justify-center min-h-screen p-4">
-
-    <div class="main-container w-full mx-auto">
-
-        <!-- 시작 화면 -->
-        <div id="start-screen" class="text-center bg-white p-8 rounded-2xl shadow-xl">
-            <h1 class="text-4xl font-title text-sky-600 mb-4">영단어 정복!</h1>
-            <p class="text-gray-600 mb-8">학습과 퀴즈 중 무엇을 먼저 해볼까?</p>
-            <div class="space-y-4">
-                <button id="start-study-btn" class="btn w-full bg-amber-400 hover:bg-amber-500 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md transition-transform">
-                    📖 학습하기
-                </button>
-                <button id="start-quiz-btn" class="btn w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md transition-transform">
-                    ✏️ 퀴즈 풀기
-                </button>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="app-container rounded-lg shadow-lg border">
+        <!-- Main Screen -->
+        <div id="main-screen" class="main-screen">
+            <div class="flex-grow flex flex-col justify-center items-center">
+                <h1 class="text-xl font-bold text-gray-600">月刊会計 X リスクマ</h1>
+                <h2 class="text-2xl font-bold mt-4 text-gray-800 whitespace-nowrap">移転価格とは何ですか？</h2>
             </div>
-        </div>
-
-        <!-- 학습 모드 화면 -->
-        <div id="study-screen" class="hidden">
-            <div class="relative">
-                <div id="study-card" class="card w-full h-80">
-                    <!-- 카드 앞면 -->
-                    <div class="front absolute w-full h-full bg-white rounded-2xl shadow-lg p-8 flex flex-col justify-center items-center">
-                        <p id="study-word" class="text-6xl font-bold text-sky-700"></p>
-                        <button id="speak-btn-front" class="mt-4 text-4xl">🔊</button>
-                        <button id="flip-to-back-btn" class="mt-8 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-xl text-lg">정답 확인</button>
-                    </div>
-                    <!-- 카드 뒷면 -->
-                    <div class="back absolute w-full h-full bg-sky-100 rounded-2xl shadow-lg p-8 flex flex-col justify-center items-center text-center">
-                        <p id="study-meaning" class="text-4xl font-bold text-sky-800 mb-4"></p>
-                        <p id="study-example" class="text-lg text-gray-700"></p>
-                        <button id="flip-to-front-btn" class="mt-8 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-xl text-lg">다시 보기</button>
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-between mt-6">
-                <button id="prev-word-btn" class="btn bg-white py-3 px-6 rounded-lg shadow-md font-bold text-gray-700">이전</button>
-                <p id="study-progress" class="flex items-center font-semibold text-gray-600">1 / 12</p>
-                <button id="next-word-btn" class="btn bg-white py-3 px-6 rounded-lg shadow-md font-bold text-gray-700">다음</button>
-            </div>
-            <button id="back-to-start-from-study" class="btn w-full mt-6 bg-red-400 hover:bg-red-500 text-white font-bold py-3 rounded-xl text-lg">처음으로</button>
-        </div>
-
-        <!-- 퀴즈 모드 화면 -->
-        <div id="quiz-screen" class="hidden">
-             <div class="text-center mb-4">
-                <p id="quiz-progress-text" class="text-lg font-semibold text-gray-700">문제 1 / 12</p>
-                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div id="quiz-progress-bar" class="bg-amber-400 h-2.5 rounded-full transition-all duration-300" style="width: 8%"></div>
-                </div>
-            </div>
-            <div class="bg-white p-8 rounded-2xl shadow-lg text-center mb-6">
-                <p id="quiz-word" class="text-5xl font-bold text-sky-700"></p>
-                 <button id="speak-btn-quiz" class="mt-2 text-3xl">🔊</button>
-            </div>
-            <div id="quiz-options" class="grid grid-cols-1 gap-3">
-                <!-- 보기 버튼들이 여기에 동적으로 추가됩니다 -->
-            </div>
-            <button id="back-to-start-from-quiz" class="btn w-full mt-6 bg-red-400 hover:bg-red-500 text-white font-bold py-3 rounded-xl text-lg">처음으로</button>
-        </div>
-        
-        <!-- 결과 화면 -->
-        <div id="result-screen" class="hidden text-center bg-white p-8 rounded-2xl shadow-xl">
-            <h2 class="text-3xl font-bold text-sky-600 mb-2">참 잘했어요!</h2>
-            <p id="score-text" class="text-2xl text-gray-700 mb-6"></p>
-            <div id="result-message" class="text-xl text-amber-600 font-semibold mb-8"></div>
-            <button id="retry-quiz-btn" class="btn w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow-md">
-                다시 풀어보기
+            <button id="start-btn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-4 rounded-lg transition duration-300 mt-8 shadow-md">
+                始める
             </button>
-             <button id="back-to-start-from-result" class="btn w-full mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 rounded-xl text-lg">처음으로</button>
         </div>
 
+        <!-- Chat Container (Initially Hidden) -->
+        <div id="chat-container" class="flex flex-col h-full" style="display: none;">
+            <!-- Chat Header -->
+            <div class="chat-header p-3 flex items-center shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                <h1 class="text-lg font-bold">権チーム長 (財務会計)</h1>
+            </div>
+
+            <!-- Chat Body -->
+            <div id="chat-body" class="flex-1 p-4 overflow-y-auto space-y-4 bg-[#A8C5D4]">
+                <!-- Date Separator -->
+                <div class="text-center my-2">
+                    <span class="chat-date-separator text-white px-3 py-1 rounded-full">2025年8月29日金曜日</span>
+                </div>
+                <!-- Conversation Messages will be injected here by JS -->
+            </div>
+
+            <!-- Controls -->
+            <div class="controls p-4 bg-white border-t">
+                <button id="next-btn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-4 rounded-lg transition duration-300">
+                    次の対話を見る
+                </button>
+            </div>
+        </div>
     </div>
 
-    <script>
-        const words = [
-            { word: 'beach', meaning: '해변', example: "Let's go to the beach." },
-            { word: 'sea', meaning: '바다', example: 'There are lots of fish under the sea.' },
-            { word: 'park', meaning: '공원', example: 'Many people go to the park.' },
-            { word: 'bird', meaning: '새', example: 'The birds make a nest on the tree.' },
-            { word: 'sing', meaning: '노래하다', example: 'Can Jenny sing well?' },
-            { word: 'buzz', meaning: '윙윙거리다', example: 'The bees buzz.' },
-            { word: 'what', meaning: '무엇', example: 'What do you want for your birthday?' },
-            { word: 'tweet', meaning: '짹짹거리다', example: 'The birds tweet.' },
-            { word: 'man', meaning: '남자', example: 'That man is a cook.' },
-            { word: 'woof', meaning: '멍멍', example: 'The dog says woof.' },
-            { word: 'math', meaning: '수학', example: "James doesn't like math." },
-            { word: 'clothe', meaning: '옷을 입히다', example: 'Parents clothe their children everyday.' }
-        ];
+<script>
+    const mainScreen = document.getElementById('main-screen');
+    const startButton = document.getElementById('start-btn');
+    const chatContainer = document.getElementById('chat-container');
+    const chatBody = document.getElementById('chat-body');
+    const nextButton = document.getElementById('next-btn');
 
-        // UI 요소
-        const startScreen = document.getElementById('start-screen');
-        const studyScreen = document.getElementById('study-screen');
-        const quizScreen = document.getElementById('quiz-screen');
-        const resultScreen = document.getElementById('result-screen');
+    const messages = [
+        { from: 'me', time: '午後 2:01', text: 'チーム長！明日、リスクマネジメントのワークショップで移転価格の講義があると聞きましたが…正直、名前からして難しすぎます。一体、移転価格って何なんですか？' },
+        { from: 'you', name: '権チーム長', time: '午後 2:01', text: 'ああ、デカキムさん。いい質問ですね。<b class="font-bold">移転価格</b>。文字通り<b class="font-bold">「価格を移転する」</b>という意味です。私たちのようなグループ会社間で取引する際に決める内部価格のことですよ。' },
+        { from: 'me', time: '午後 2:02', text: '身内で決める価格なのに…なぜそれが重要な経営リスクになるんですか？' },
+        { from: 'you', name: '権チーム長', time: '午後 2:03', text: "まさに<b class='font-bold text-red-600'>税金</b>のためです。国税庁は「あなたたちグループ会社間で取引するとしても、<b class='font-bold'>完全に独立した会社間で取引するように公正な市場価格（正常価格）</b>で行いなさい！」と要求しています。ここでいう「正常」とは、私たちが普段使う「正常/異常」とは意味が異なります。税法で定められた「公正な市場価格」を意味する専門用語なんです。不当に税金を減らすのを防ぐためですね。" },
+        { from: 'me', time: '午後 2:04', text: 'なるほど！では、その公正な市場価格、つまり「正常価格」はどうやって見つけるんですか？基準はありますか？' },
+        { from: 'you', name: '権チーム長', time: '午後 2:05', text: "もちろんです。いくつかの方法がありますが、町のパン屋さんの話で説明しますね。<br><br><b>① 隣の店のパンの値段を見る(CUP):</b> うちと全く同じパンを隣の店がいくらで売っているか見ること。<br><b>② コンビニのマージンを見る(RPM):</b> コンビニがパンをいくらで仕入れて売っているかを見て、うちのマージンを逆算すること。<br><b>③ 原価に利益を上乗せする(C+):</b> パンの原価に他のパン屋さんのように適正な利益を上乗せすること。" },
+        { from: 'you', name: '権チーム長', time: '午後 2:06', text: "しかし、現実で最もよく使われる方法は、私たちの会社が使っている<b class='font-bold'>「取引単位営業利益法(TNMM)」</b>です。<br><br>「うちのパン屋と事業内容が似ている<b class='font-bold'>同業他社のパン屋</b>は、最終的に何%の利益を残しているか？」を見るのです。最も現実的な方法なので、一番よく使われます。" },
+        { from: 'me', time: '午後 2:07', text: '同業他社のパン屋さんですか？じゃあ、そのパン屋さんの利益率と、うちの利益率を比較するんですね！' },
+        { from: 'you', name: '権チーム長', time: '午後 2:08', text: "その通りです。その類似したパン屋さんを<b class='font-bold'>「比較対象企業」</b>と呼びます。その会社たちの利益率の成績表から、良すぎる・悪すぎる会社を除き、残った中間グループの利益率の区間を<b class='font-bold text-blue-600'>「四分位レンジ」</b>、つまり<b class='font-bold'>「安全地帯」</b>とします。うちの会社の利益率がその中に入っていれば、国税庁もOKしてくれるわけです。" },
+        { from: 'me', time: '午後 2:09', text: 'その安全地帯は毎年同じなんですか？' },
+        { from: 'you', name: '権チーム長', time: '午後 2:10', text: "いいえ、非常に重要なポイントです。<b class='font-bold'>安全地帯は毎年変わります。</b>景気が良ければ類似企業の利益率は皆一緒に上がり、安全地帯も上がりますし、景気が悪ければ一緒に下がります。だから毎年チェックする必要があるんです。" },
+        { from: 'me', time: '午後 2:11', text: 'チーム長、では私たちの事業部の中にオファー販売だけを行う部署がありますが、これは少し違いますよね？私たちは商品を仕入れるのではなく、仲介だけをしていますが。' },
+        { from: 'you', name: '権チーム長', time: '午後 2:12', text: "本当に重要な質問ですね。ここで大きな税金問題が生じる可能性があります。パン屋の例えを続けましょう。<br><br>単にお客さんとパン屋さんを<b class='font-bold'>繋いであげて手数料だけもらうのがオファー販売</b>です。しかし、書類上の名前だけで、<b class='font-bold text-red-600'>実際には私たちがパンを全て仕入れて在庫リスクを負い、直接売っている（バイセル）</b>のであれば、話は全く違ってきます。" },
+        { from: 'you', name: '権チーム長', time: '午後 2:13', text: "国税庁は「君たちは単なる仲介人ではないな？パン全体（取扱高）に責任を持って売る事業者だな？それなら手数料ではなく、<b class='font-bold'>パンの販売額全体を基準に利益率を計算すべきだ！</b>」と言ってくる可能性があります。そうなると、税金計算の基準となる売上高が莫大に膨れ上がり、税金の爆弾を食らうことになりかねません。だから機能とリスクの「実質」が重要なんです。" },
+        { from: 'you', name: '権チーム長', time: '午後 2:13', text: "前回の税務調査で私たちのオファー販売が問題になったのも、まさにその「実質」のためでした。最大の理由は、書類上はオファー販売ですが、<b class='font-bold'>実際の業務内容がバイセルに近いと見なされたからです。</b>私たちが顧客相談から価格交渉まで深く関与していたからです。その他にも、<b class='font-bold'>①価格交渉時に私たちのマージンが割引額だけ減少する点、②売上に対して事業部の人員が多く、単純な仲介以上の役割を果たしていると見なされた点</b>などが総合的に考慮され、「これは単純な仲介ではなく、実質的な販売活動だ」と判断されたのです。" },
+        { from: 'me', time: '午後 2:14', text: 'うわ…本当にぞっとしますね。では、APAという制度は何ですか？そういったリスクを防いでくれるんですか？' },
+        { from: 'you', name: '権チーム長', time: '午後 2:15', text: "APAは<b class='font-bold'>「5年間の税金安全保障覚書」</b>のようなものです。国税庁と事前に会って、「今後5年間はこのくらいの利益率でやります！」と約束し、税務調査のリスクをなくす制度です。" },
+        { from: 'me', time: '午後 2:16', text: 'そんなに良いものなら、なぜ私たちはやらないんですか？本社が反対しているという話も聞いたような気がします。' },
+        { from: 'you', name: '権チーム長', time: '午後 2:17', text: "本社は<b class='font-bold'>慎重な立場</b>を取っています。いくつか<b class='font-bold'>懸念している点</b>があるからです。<br><br>第一に、APAを行うには日本の本社の原価のような<b class='font-bold'>グループ全体の機密情報が開示されることを懸念</b>しています。<br><br>第二に、韓国での約束が他国に影響を及ぼす<b class='font-bold'>前例となる可能性を慎重に考慮</b>しているのです。" },
+        { from: 'me', time: '午後 2:18', text: 'うわ…本当に複雑ですね。チーム長のおかげで、明日のワークショップで全体像を理解しながら聞けそうです！本当にありがとうございます！' },
+        { from: 'you', name: '権チーム長', time: '午後 2:19', text: 'どういたしまして、デカキムさん。これだけ知っていれば、明日の講義を聞くのに大いに役立つはずですよ。何か疑問があればいつでも聞いてくださいね！' }
+    ];
 
-        // 버튼
-        const startStudyBtn = document.getElementById('start-study-btn');
-        const startQuizBtn = document.getElementById('start-quiz-btn');
-        const backToStartFromStudy = document.getElementById('back-to-start-from-study');
-        const backToStartFromQuiz = document.getElementById('back-to-start-from-quiz');
-        const backToStartFromResult = document.getElementById('back-to-start-from-result');
-        const retryQuizBtn = document.getElementById('retry-quiz-btn');
+    let currentMessageIndex = 0;
 
-        // 상태 변수
-        let currentWordIndex = 0;
-        let currentQuizIndex = 0;
-        let quizQuestions = [];
-        let score = 0;
-        const synth = window.speechSynthesis;
-        let voices = [];
-
-        // --- 음성 합성 기능 ---
-        function populateVoiceList() {
-            if(typeof synth === 'undefined') {
-                return;
-            }
-            voices = synth.getVoices().filter(voice => voice.lang.startsWith('en'));
+    function showNextMessage() {
+        if (currentMessageIndex >= messages.length) {
+            return;
         }
 
-        populateVoiceList();
-        if (typeof synth !== 'undefined' && synth.onvoiceschanged !== undefined) {
-            synth.onvoiceschanged = populateVoiceList;
+        const msg = messages[currentMessageIndex];
+        const messageGroup = document.createElement('div');
+
+        if (msg.from === 'me') {
+            messageGroup.className = 'message-group me';
+            messageGroup.innerHTML = `
+                <div class="flex items-end justify-end">
+                    <span class="timestamp mr-2">${msg.time}</span>
+                    <div class="chat-bubble me p-3 rounded-lg">
+                        <p class="text-sm">${msg.text}</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            messageGroup.className = 'message-group you';
+            messageGroup.innerHTML = `
+                <div class="flex flex-col items-start">
+                    <p class="text-xs font-medium text-gray-800 ml-1 mb-1">${msg.name}</p>
+                    <div class="flex items-end">
+                        <div class="chat-bubble you p-3 rounded-lg shadow">
+                            <p class="text-sm">${msg.text}</p>
+                        </div>
+                        <span class="timestamp ml-2">${msg.time}</span>
+                    </div>
+                </div>
+            `;
         }
 
-        function speak(text) {
-            if (synth.speaking) {
-                console.error('speechSynthesis.speaking');
-                return;
-            }
-            if (text !== '') {
-                const utterThis = new SpeechSynthesisUtterance(text);
-                utterThis.onend = function (event) {
-                    // console.log('SpeechSynthesisUtterance.onend');
-                }
-                utterThis.onerror = function (event) {
-                    console.error('SpeechSynthesisUtterance.onerror');
-                }
-                // 영어 목소리 우선 선택
-                const englishVoice = voices.find(voice => voice.name.includes('Google US English') || voice.name.includes('Microsoft David') || voice.lang === 'en-US');
-                utterThis.voice = englishVoice || voices[0];
-                utterThis.pitch = 1;
-                utterThis.rate = 0.9;
-                synth.speak(utterThis);
-            }
+        chatBody.appendChild(messageGroup);
+
+        // Animate the new message
+        setTimeout(() => {
+            messageGroup.classList.add('visible');
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }, 10);
+
+        currentMessageIndex++;
+
+        if (currentMessageIndex >= messages.length) {
+            nextButton.textContent = '全ての対話を表示しました';
+            nextButton.disabled = true;
+            nextButton.classList.remove('hover:bg-yellow-500');
+            nextButton.classList.add('bg-gray-400', 'cursor-not-allowed');
         }
+    }
 
-        // --- 화면 전환 로직 ---
-        function showScreen(screen) {
-            startScreen.classList.add('hidden');
-            studyScreen.classList.add('hidden');
-            quizScreen.classList.add('hidden');
-            resultScreen.classList.add('hidden');
-            screen.classList.remove('hidden');
-        }
+    // Event listener for the start button
+    startButton.addEventListener('click', () => {
+        mainScreen.style.display = 'none';
+        chatContainer.style.display = 'flex';
+        showNextMessage(); // Show the first message automatically
+    });
 
-        startStudyBtn.addEventListener('click', () => {
-            showScreen(studyScreen);
-            startStudy();
-        });
-        startQuizBtn.addEventListener('click', () => {
-            showScreen(quizScreen);
-            startQuiz();
-        });
-        backToStartFromStudy.addEventListener('click', () => showScreen(startScreen));
-        backToStartFromQuiz.addEventListener('click', () => showScreen(startScreen));
-        backToStartFromResult.addEventListener('click', () => showScreen(startScreen));
-        retryQuizBtn.addEventListener('click', () => {
-            showScreen(quizScreen);
-            startQuiz();
-        });
-
-        // --- 학습 모드 로직 ---
-        const studyCard = document.getElementById('study-card');
-        const studyWord = document.getElementById('study-word');
-        const studyMeaning = document.getElementById('study-meaning');
-        const studyExample = document.getElementById('study-example');
-        const studyProgress = document.getElementById('study-progress');
-        const speakBtnFront = document.getElementById('speak-btn-front');
-        const flipToBackBtn = document.getElementById('flip-to-back-btn');
-        const flipToFrontBtn = document.getElementById('flip-to-front-btn');
-        const prevWordBtn = document.getElementById('prev-word-btn');
-        const nextWordBtn = document.getElementById('next-word-btn');
-        
-        function startStudy() {
-            currentWordIndex = 0;
-            displayStudyWord();
-        }
-
-        function displayStudyWord() {
-            studyCard.classList.remove('is-flipped');
-            const wordData = words[currentWordIndex];
-            studyWord.textContent = wordData.word;
-            studyMeaning.textContent = wordData.meaning;
-            studyExample.textContent = wordData.example;
-            studyProgress.textContent = `${currentWordIndex + 1} / ${words.length}`;
-        }
-
-        speakBtnFront.addEventListener('click', () => speak(words[currentWordIndex].word));
-        flipToBackBtn.addEventListener('click', () => studyCard.classList.add('is-flipped'));
-        flipToFrontBtn.addEventListener('click', () => studyCard.classList.remove('is-flipped'));
-        
-        nextWordBtn.addEventListener('click', () => {
-            currentWordIndex = (currentWordIndex + 1) % words.length;
-            displayStudyWord();
-        });
-        prevWordBtn.addEventListener('click', () => {
-            currentWordIndex = (currentWordIndex - 1 + words.length) % words.length;
-            displayStudyWord();
-        });
-
-        // --- 퀴즈 모드 로직 ---
-        const quizProgressText = document.getElementById('quiz-progress-text');
-        const quizProgressBar = document.getElementById('quiz-progress-bar');
-        const quizWord = document.getElementById('quiz-word');
-        const speakBtnQuiz = document.getElementById('speak-btn-quiz');
-        const quizOptions = document.getElementById('quiz-options');
-        const scoreText = document.getElementById('score-text');
-        const resultMessage = document.getElementById('result-message');
-        
-        function startQuiz() {
-            currentQuizIndex = 0;
-            score = 0;
-            createQuizQuestions();
-            displayQuizQuestion();
-        }
-
-        function createQuizQuestions() {
-            quizQuestions = [...words].sort(() => Math.random() - 0.5);
-        }
-
-        function displayQuizQuestion() {
-            const question = quizQuestions[currentQuizIndex];
-            quizWord.textContent = question.word;
-            quizOptions.innerHTML = '';
-            
-            // 정답과 오답 보기 만들기
-            const options = [question.meaning];
-            while (options.length < 4) {
-                const randomWord = words[Math.floor(Math.random() * words.length)];
-                if (!options.includes(randomWord.meaning)) {
-                    options.push(randomWord.meaning);
-                }
-            }
-            // 보기 섞기
-            options.sort(() => Math.random() - 0.5);
-
-            options.forEach(option => {
-                const button = document.createElement('button');
-                button.textContent = option;
-                button.classList.add('quiz-option', 'btn', 'w-full', 'bg-white', 'p-4', 'rounded-lg', 'shadow', 'text-lg', 'font-semibold', 'text-gray-700', 'border-2', 'border-gray-200', 'hover:bg-gray-100');
-                button.addEventListener('click', () => checkAnswer(button, option, question.meaning));
-                quizOptions.appendChild(button);
-            });
-
-            // 진행 상태 업데이트
-            quizProgressText.textContent = `문제 ${currentQuizIndex + 1} / ${quizQuestions.length}`;
-            const progressPercentage = ((currentQuizIndex + 1) / quizQuestions.length) * 100;
-            quizProgressBar.style.width = `${progressPercentage}%`;
-        }
-
-        speakBtnQuiz.addEventListener('click', () => speak(quizQuestions[currentQuizIndex].word));
-
-        function checkAnswer(button, selectedMeaning, correctMeaning) {
-            const allOptions = quizOptions.querySelectorAll('.quiz-option');
-            allOptions.forEach(opt => opt.classList.add('disabled'));
-
-            if (selectedMeaning === correctMeaning) {
-                score++;
-                button.classList.add('correct');
-            } else {
-                button.classList.add('incorrect');
-                allOptions.forEach(opt => {
-                    if (opt.textContent === correctMeaning) {
-                        opt.classList.add('correct');
-                    }
-                });
-            }
-
-            setTimeout(() => {
-                currentQuizIndex++;
-                if (currentQuizIndex < quizQuestions.length) {
-                    displayQuizQuestion();
-                } else {
-                    showResults();
-                }
-            }, 1500);
-        }
-
-        function showResults() {
-            showScreen(resultScreen);
-            scoreText.textContent = `${quizQuestions.length}개 중에 ${score}개를 맞혔어요!`;
-            
-            let message = '';
-            const percentage = (score / quizQuestions.length) * 100;
-            if (percentage === 100) {
-                message = '와, 완벽해요! 영어 단어 박사님이네요! 🏆';
-            } else if (percentage >= 70) {
-                message = '정말 잘했어요! 조금만 더하면 다 맞힐 수 있겠어요! 👍';
-            } else if (percentage >= 50) {
-                message = '좋아요! 자꾸 하다 보면 실력이 쑥쑥 늘 거예요! 😊';
-            } else {
-                message = '괜찮아! 다시 한번 도전해볼까요? 할 수 있어요! 💪';
-            }
-            resultMessage.textContent = message;
-        }
-    </script>
+    nextButton.addEventListener('click', showNextMessage);
+</script>
 </body>
 </html>
